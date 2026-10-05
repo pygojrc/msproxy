@@ -1,0 +1,53 @@
+name: msproxy build and publish
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: msproxy-${{ github.repository }}-${{ github.event_name == 'pull_request' && github.ref || 'release' }}
+  cancel-in-progress: true
+
+jobs:
+  container:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+      - name: Install Podman
+        run: sudo apt-get update && sudo apt-get install -y podman
+      - name: Configuration tests
+        run: uv run python -m unittest discover -s podman_xray/tests -p 'test_*.py' -v
+      - name: Build image with Podman
+        env:
+          VERSION: ${{ github.ref_name }}
+          REVISION: ${{ github.sha }}
+        run: |
+          podman build --format docker -f podman_xray/Dockerfile -t localhost/msproxy:ci \
+            --build-arg VERSION="$VERSION" --build-arg REVISION="$REVISION" .
+      - name: Real TLS VLESS XHTTP integration test
+        run: uv run podman_xray/tests/integration.py -i localhost/msproxy:ci -o .ms/tasks/ci/temp/running_test
+      - name: Publish release to GHCR
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+          REVISION: ${{ github.sha }}
+        run: |
+          IMAGE="ghcr.io/${REPOSITORY,,}"
+          printf '%s' "$GHCR_TOKEN" | podman login ghcr.io -u "$REGISTRY_USER" --password-stdin
+          podman tag localhost/msproxy:ci "$IMAGE:$VERSION"
+          podman tag localhost/msproxy:ci "$IMAGE:sha-${REVISION:0:12}"
+          podman push "$IMAGE:$VERSION"
+          podman push "$IMAGE:sha-${REVISION:0:12}"

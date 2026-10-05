@@ -1,0 +1,26 @@
+[Unit]
+Description=msproxy VLESS XHTTP TLS server
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=ghcr.io/pygojrc/msproxy:v0.1.0
+ContainerName=msproxy
+PublishPort=443:8443
+Volume=/etc/msproxy/config:/config:ro
+Volume=/etc/msproxy/certs:/certs:ro
+Environment=MSPROXY_CONFIG_FILE=/config/server.json
+HealthCmd=python3 /opt/msproxy/msproxy.py healthcheck
+HealthInterval=30s
+HealthTimeout=5s
+HealthRetries=3
+HealthStartPeriod=10s
+HealthOnFailure=kill
+
+[Service]
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=180
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+**
+!xray-core/
+!xray-core/**
+!podman_xray/
+!podman_xray/**
+xray-core/.github/
+podman_xray/tests/
+podman_xray/examples/
+podman_xray/deploy/
+**/.git/
+**/__pycache__/
+**/*.pyc
+**/*.key
+**/*.pem
+**/*.crt
+**/.env
+**/running_*/

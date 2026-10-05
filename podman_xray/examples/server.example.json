@@ -1,0 +1,13 @@
+{
+  "domain": "proxy.example.com",
+  "xhttp_path": "/replace-with-your-path",
+  "uuid": "REPLACE_WITH_YOUR_UUID",
+  "vless_decryption": "REPLACE_WITH_YOUR_VLESS_DECRYPTION",
+  "tls_cert_file": "/certs/cert.pem",
+  "tls_key_file": "/certs/key.pem",
+  "https_port": 8443,
+  "xray_port": 10086,
+  "public_port": 443,
+  "socks_port": 1080,
+  "log_level": "warning"
+}

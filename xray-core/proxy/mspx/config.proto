@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package xray.proxy.mspx;
+option go_package = "github.com/xtls/xray-core/proxy/mspx";
+
+import "common/protocol/user.proto";
+import "common/protocol/server_spec.proto";
+
+message Account {
+  string psk = 1;
+}
+
+message ClientConfig {
+  xray.common.protocol.ServerEndpoint server = 1;
+}
+
+message ServerConfig {
+  repeated xray.common.protocol.User users = 1;
+}
